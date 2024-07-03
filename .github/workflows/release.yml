@@ -1,0 +1,40 @@
+name: Push API specification to marketplace
+
+on: 
+  release:
+    types: [published]
+
+jobs:
+  copy-file:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout source repo
+      uses: actions/checkout@v4
+      
+    - name: Checkout destination repo
+      uses: actions/checkout@v4
+      with:
+        repository: FRIDA-api/marketplace
+        token: ${{ secrets.ACCESS_TOKEN_GITHUB }}
+        path: destination-repo
+
+    - name: Copy files
+      run: |
+        mkdir -p destination-repo
+
+        cp -f docs/FRIDA_PensionInformation_OA3/archive/FRIDA_PensionInformation_OA3_full_en.yaml destination-repo/marketplace/src/assets/api/pension-api.yaml
+
+        cd destination-repo
+
+        git config --global user.name "github-actions[bot]"
+        git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
+        git add .
+
+        if git status | grep -q "Changes to be committed"
+        then
+          git commit -m "Copy api specification from pension-api" --allow-empty
+          git push origin main
+        else
+          echo "No changes detected"
+        fi
